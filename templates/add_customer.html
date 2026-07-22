@@ -1,0 +1,489 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Add Customer & Sales{% endblock %}
+{% block page_subtitle %}Record new customer and sales transaction{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-user-plus text-primary me-2"></i>Customer & Sales Transaction
+                </h5>
+                <small class="text-secondary">Add customer and record sales transaction</small>
+            </div>
+            <div class="card-body p-4">
+
+                <form method="POST" action="/customer/add" id="customerForm">
+                    <div class="row g-4">
+                        <!-- LEFT COLUMN: Customer Details -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 bg-light rounded-4">
+                                <div class="card-header bg-transparent border-0 pt-3 px-4">
+                                    <h6 class="fw-bold mb-0"><i class="fas fa-user text-primary me-2"></i>Customer
+                                        Details</h6>
+                                    <small class="text-secondary">Enter customer information</small>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Customer Name <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="customer_name" id="customer_name"
+                                            class="form-control rounded-3" placeholder="Full name"
+                                            value="{{ customer_name if customer_name else '' }}" required
+                                            onblur="checkCustomer()" oninput="checkCustomer()">
+                                        <div id="customerCheckResult" class="mt-1"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Gender</label>
+                                        <select name="gender" id="gender" class="form-select rounded-3">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Customer Type</label>
+                                        <select name="customer_type" id="customer_type" class="form-select rounded-3">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Member">Member</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Phone <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="phone" id="phone" class="form-control rounded-3"
+                                            placeholder="Phone number (e.g., 09-12345678)" required
+                                            onchange="checkCustomer()" oninput="checkCustomer()">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Email <span
+                                                class="text-danger">*</span></label>
+                                        <input type="email" name="email" id="email" class="form-control rounded-3"
+                                            placeholder="Email address" required onchange="checkCustomer()"
+                                            oninput="checkCustomer()">
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <label class="form-label fw-semibold">Customer Segment</label>
+                                        <input type="text" name="customer_segment" id="customer_segment"
+                                            class="form-control rounded-3 bg-light" readonly value="Low Value">
+                                        <small class="text-muted">
+                                            Auto-calculated (Low → Medium → High)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN: Sales Details -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 bg-light rounded-4">
+                                <div class="card-header bg-transparent border-0 pt-3 px-4">
+                                    <h6 class="fw-bold mb-0"><i class="fas fa-shopping-cart text-success me-2"></i>Sales
+                                        Details</h6>
+                                    <small class="text-secondary">Enter transaction information</small>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Product Line</label>
+                                        <select name="product_line" id="product_line" class="form-select rounded-3"
+                                            onchange="loadProducts()">
+                                            <option value="Electronic accessories">Electronic Accessories</option>
+                                            <option value="Food and beverages">Food &amp; Beverages</option>
+                                            <option value="Fashion accessories">Fashion Accessories</option>
+                                            <option value="Health and beauty">Health &amp; Beauty</option>
+                                            <option value="Home and lifestyle">Home &amp; Lifestyle</option>
+                                            <option value="Sports and travel">Sports &amp; Travel</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Product</label>
+
+                                        <select name="product_id" id="product_id" class="form-select rounded-3"
+                                            onchange="loadProductsPrice()">
+
+                                            <option value="">Select Product</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Unit Price (Rs.) <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" step="0.01" name="unit_price" id="unit_price"
+                                                class="form-control rounded-3" placeholder="e.g., 50.00" required
+                                                onchange="calculateTotal()" oninput="calculateTotal()">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Quantity <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" name="quantity" id="quantity"
+                                                class="form-control rounded-3" placeholder="e.g., 5" required
+                                                onchange="calculateTotal()" oninput="calculateTotal()">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Tax (Rs.)</label>
+                                            <input type="number" step="0.01" name="tax" id="tax"
+                                                class="form-control rounded-3" placeholder="e.g., 12.50"
+                                                onchange="calculateTotal()" oninput="calculateTotal()">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Discount (Rs.)</label>
+                                            <input type="number" step="0.01" name="discount" id="discount"
+                                                class="form-control rounded-3" placeholder="e.g., 5.00"
+                                                onchange="calculateTotal()" oninput="calculateTotal()">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Subtotal (Rs.)</label>
+                                            <input type="text" id="subtotal" class="form-control rounded-3 bg-light"
+                                                readonly>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Total (Rs.) <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" step="0.01" name="total" id="total"
+                                                class="form-control rounded-3" placeholder="Auto-calculated" required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Payment Method</label>
+                                            <select name="payment_method" class="form-select rounded-3">
+                                                <option value="Cash">Cash</option>
+                                                <option value="Credit Card">Credit Card</option>
+                                                <option value="Ewallet">E-Wallet</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Branch</label>
+                                            <select name="branch" class="form-select rounded-3">
+                                                <option value="A">Branch A</option>
+                                                <option value="B">Branch B</option>
+                                                <option value="C">Branch C</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">City</label>
+                                            <select name="city" class="form-select rounded-3">
+                                                <option value="Kathmandu">Kathmandu</option>
+                                                <option value="Pokhara">Pokhara</option>
+                                                <option value="Bharatpur">Bharatpur</option>
+
+                                            </select>
+                                        </div>
+
+
+
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-semibold">Sale Date</label>
+                                            <input type="date" name="date" class="form-control rounded-3"
+                                                value="{{ today }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-3">
+                        <button type="submit" class="btn btn-primary rounded-3 py-2 px-4 fw-semibold">
+                            <i class="fas fa-save me-2"></i>Save Transaction
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary rounded-3 py-2 px-4"
+                            onclick="resetForm()">
+                            <i class="fas fa-undo me-2"></i>Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function calculateTotal() {
+        const unitPrice = parseFloat(document.getElementById('unit_price').value) || 0;
+        const quantity = parseInt(document.getElementById('quantity').value) || 0;
+        const tax = parseFloat(document.getElementById('tax').value) || 0;
+        const discount = parseFloat(document.getElementById('discount').value) || 0;
+
+        const subtotal = unitPrice * quantity;
+        const total = subtotal + tax - discount;
+
+        document.getElementById('subtotal').value = subtotal.toFixed(2);
+        document.getElementById('total').value = total.toFixed(2);
+    }
+
+    let checkTimeout = null;
+
+    function checkCustomer() {
+        const customerName = document.getElementById('customer_name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const resultDiv = document.getElementById('customerCheckResult');
+        const segmentField = document.getElementById('customer_segment');
+
+        // Reset if any field is empty
+        if (!customerName || !phone || !email) {
+            resultDiv.innerHTML = '<span class="text-muted"><i class="fas fa-info-circle me-1"></i> Please enter name, phone, and email to check.</span>';
+            segmentField.value = 'Low Value';
+            return;
+        }
+
+        if (customerName.length < 2) {
+            resultDiv.innerHTML = '<span class="text-muted"><i class="fas fa-info-circle me-1"></i> Enter at least 2 characters for name.</span>';
+            segmentField.value = 'Low Value';
+            return;
+        }
+
+        if (phone.length < 7) {
+            resultDiv.innerHTML = '<span class="text-muted"><i class="fas fa-info-circle me-1"></i> Enter a valid phone number.</span>';
+            segmentField.value = 'Low Value';
+            return;
+        }
+
+        if (!email.includes('@') || !email.includes('.')) {
+            resultDiv.innerHTML = '<span class="text-muted"><i class="fas fa-info-circle me-1"></i> Enter a valid email address.</span>';
+            segmentField.value = 'Low Value';
+            return;
+        }
+
+        if (checkTimeout) {
+            clearTimeout(checkTimeout);
+        }
+
+        resultDiv.innerHTML = '<span class="text-muted"><i class="fas fa-spinner fa-spin"></i> Checking database...</span>';
+        segmentField.value = 'Checking...';
+
+        checkTimeout = setTimeout(() => {
+            fetch('/customer/check_customer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    customer_name: customerName,
+                    phone: phone,
+                    email: email
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server response:', data);
+
+                    if (data.error) {
+                        resultDiv.innerHTML = `<span class="text-danger">Error: ${data.error}</span>`;
+                        segmentField.value = 'Low Value';
+                        return;
+                    }
+
+                    // ============================================================
+                    // EXACT MATCH: Name + Phone + Email all match
+                    // ============================================================
+                    if (data.exists && data.exact_match) {
+                        let segmentClass = 'secondary';
+                        let segmentText = data.current_segment || 'Low Value';
+                        if (segmentText === 'High Value') segmentClass = 'success';
+                        else if (segmentText === 'Medium Value') segmentClass = 'warning';
+
+                        segmentField.value = segmentText;
+
+                        let upgradeMsg = '';
+                        if (data.can_upgrade) {
+                            upgradeMsg = `<div class="text-success mt-1" style="font-size: 13px;">
+                        <i class="fas fa-arrow-up me-1"></i> 
+                        <strong>Will be upgraded to ${data.new_segment}</strong> upon save!
+                    </div>`;
+                        } else {
+                            upgradeMsg = `<div class="text-muted mt-1" style="font-size: 13px;">
+                        <i class="fas fa-check-circle me-1"></i> 
+                        Already at highest segment (${segmentText})
+                    </div>`;
+                        }
+
+                        resultDiv.innerHTML = `
+                    <div class="text-success">
+                        <i class="fas fa-user-check me-1"></i>
+                        <strong>✅ Existing Customer - Exact Match!</strong>
+                    </div>
+                    <div class="mt-1">
+                        <span class="text-secondary" style="font-size: 13px;">Current Segment: </span>
+                        <span class="badge bg-${segmentClass}">${segmentText}</span>
+                    </div>
+                    ${upgradeMsg}
+                    <div class="text-muted mt-1" style="font-size: 12px;">
+                        <i class="fas fa-phone me-1"></i> ${data.customer.phone} 
+                        <i class="fas fa-envelope ms-3 me-1"></i> ${data.customer.email}
+                    </div>
+                `;
+                        return;
+                    }
+
+                    // ============================================================
+                    // NAME EXISTS but with different contact details
+                    // ============================================================
+                    if (data.status === 'name_exists') {
+                        resultDiv.innerHTML = `
+                    <div class="text-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>⚠ Name exists with different details!</strong>
+                    </div>
+                    <div class="text-secondary mt-1" style="font-size: 13px;">
+                        ${data.message}
+                    </div>
+                    <div class="text-muted mt-1" style="font-size: 12px;">
+                        <i class="fas fa-phone me-1"></i> Existing: ${data.existing_phone || 'N/A'} 
+                        <i class="fas fa-envelope ms-3 me-1"></i> Existing: ${data.existing_email || 'N/A'}
+                    </div>
+                    <div class="text-warning mt-1" style="font-size: 12px;">
+                        <i class="fas fa-info-circle me-1"></i> 
+                        Please use the exact contact details on file, or use a different name.
+                    </div>
+                `;
+                        segmentField.value = 'Conflicts - Check details';
+                        return;
+                    }
+
+                    // ============================================================
+                    // PHONE EXISTS with different name
+                    // ============================================================
+                    if (data.status === 'phone_exists') {
+                        resultDiv.innerHTML = `
+                    <div class="text-danger">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>❌ Phone number already registered!</strong>
+                    </div>
+                    <div class="text-secondary mt-1" style="font-size: 13px;">${data.message}</div>
+                    <div class="text-muted mt-1" style="font-size: 12px;">
+                        <i class="fas fa-info-circle me-1"></i> Please use a different phone number.
+                    </div>
+                `;
+                        segmentField.value = 'Error - Phone exists';
+                        return;
+                    }
+
+                    // ============================================================
+                    // EMAIL EXISTS with different name
+                    // ============================================================
+                    if (data.status === 'email_exists') {
+                        resultDiv.innerHTML = `
+                    <div class="text-danger">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>❌ Email already registered!</strong>
+                    </div>
+                    <div class="text-secondary mt-1" style="font-size: 13px;">${data.message}</div>
+                    <div class="text-muted mt-1" style="font-size: 12px;">
+                        <i class="fas fa-info-circle me-1"></i> Please use a different email address.
+                    </div>
+                `;
+                        segmentField.value = 'Error - Email exists';
+                        return;
+                    }
+
+                    // ============================================================
+                    // COMPLETELY NEW CUSTOMER
+                    // ============================================================
+                    resultDiv.innerHTML = `
+                <div class="text-info">
+                    <i class="fas fa-user-plus me-1"></i>
+                    <strong>✨ New Customer</strong>
+                </div>
+                <div class="text-secondary mt-1" style="font-size: 13px;">
+                    No existing customer found with these exact details.
+                </div>
+                <div class="text-muted mt-1" style="font-size: 12px;">
+                    Will be added with <strong>Low Value</strong> segment.
+                </div>
+            `;
+                    segmentField.value = 'Low Value';
+
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<span class="text-danger">Error checking customer</span>`;
+                    segmentField.value = 'Low Value';
+                    console.error('Error:', error);
+                });
+        }, 600);
+    }
+
+    function resetForm() {
+        document.getElementById('subtotal').value = '';
+        document.getElementById('total').value = '';
+        document.getElementById('customerCheckResult').innerHTML = '';
+        document.getElementById('customer_name').value = '';
+        document.getElementById('customer_segment').value = 'Low Value';
+        document.getElementById('unit_price').value = '';
+        document.getElementById('quantity').value = '';
+        document.getElementById('tax').value = '';
+        document.getElementById('discount').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('email').value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        calculateTotal();
+    });
+
+    function loadProducts() {
+
+        const category = document.getElementById("product_line").value;
+
+        fetch(`/customer/get_products/${encodeURIComponent(category)}`)
+            .then(response => response.json())
+            .then(products => {
+
+                const dropdown = document.getElementById("product_id");
+
+                dropdown.innerHTML =
+                    '<option value="">Select Product</option>';
+
+                products.forEach(product => {
+
+                    dropdown.innerHTML += `
+                    <option value="${product.product_id}">
+                        ${product.product_name}
+                    </option>
+                `;
+
+                });
+
+            })
+            .catch(error => console.error(error));
+    }
+
+    function loadProductPrice() {
+
+        const id = document.getElementById("product_id").value;
+
+        if (id == "") return;
+
+        fetch("/customer/get_product/" + id)
+            .then(r => r.json())
+            .then(product => {
+
+                document.getElementById("unit_price").value =
+                    product.average_price;
+
+                calculateTotal();
+
+            });
+
+    }
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+body {
+
+    background: #f4f6f9;
+
+    font-family: Arial;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    height: 100vh;
+
+    margin: 0;
+
+}
+
+.login-box {
+
+    background: white;
+
+    padding: 40px;
+
+    width: 350px;
+
+    border-radius: 10px;
+
+    box-shadow: 0 0 20px rgba(0, 0, 0, .2);
+
+    text-align: center;
+
+}
+
+input {
+
+    width: 100%;
+
+    padding: 12px;
+
+    margin-top: 15px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 5px;
+
+    box-sizing: border-box;
+
+}
+
+button {
+
+    width: 100%;
+
+    padding: 12px;
+
+    margin-top: 20px;
+
+    background: #28a745;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 5px;
+
+    cursor: pointer;
+
+    font-size: 16px;
+
+}
+
+button:hover {
+
+    background: #218838;
+
+}
+
+.error {
+
+    color: red;
+
+    margin-top: 10px;
+
+}

@@ -1,0 +1,173 @@
+{% extends "layout.html" %}
+
+{% block page_title %}Prediction History{% endblock %}
+{% block page_subtitle %}Complete log of all predictions{% endblock %}
+
+{% block content %}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="fw-bold mb-0"><i class="fas fa-clock-rotate-left text-primary me-2"></i>All Predictions</h5>
+            <small class="text-secondary">Complete history of sales predictions</small>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group" style="width: 220px;">
+                <span class="input-group-text bg-transparent border-end-0 rounded-start-pill">
+                    <i class="fas fa-search text-secondary"></i>
+                </span>
+                <input type="text" class="form-control rounded-end-pill border-start-0" placeholder="Search..." id="searchHistory">
+            </div>
+            <button class="btn btn-outline-danger rounded-pill" id="clearHistoryBtn" title="Clear All History">
+                <i class="fas fa-trash me-1"></i>Clear All
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="historyTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Prediction Type</th>
+                        <th>Input Data</th>
+                        <th>Result</th>
+                        <th>Date & Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if records %}
+                        {% for row in records %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-secondary rounded-pill px-3 py-2">#{{ row.id }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary rounded-pill px-3 py-2">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    {{ row.prediction_type }}
+                                </span>
+                            </td>
+                            <td style="max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <span class="text-secondary" style="font-size: 14px;">{{ row.input_data }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-success">{{ row.result }}</span>
+                            </td>
+                            <td>
+                                <div style="font-size: 13px;">
+                                    <div>{{ row.created_at.strftime('%b %d, %Y') if row.created_at else 'N/A' }}</div>
+                                    <small class="text-secondary">{{ row.created_at.strftime('%I:%M %p') if row.created_at else '' }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill delete-btn" data-id="{{ row.id }}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="bg-secondary bg-opacity-10 rounded-4 p-4 d-inline-block mb-3">
+                                    <i class="fas fa-inbox fa-3x text-secondary opacity-50"></i>
+                                </div>
+                                <h6 class="fw-bold">No history found</h6>
+                                <p class="text-secondary mb-0">Predictions will appear here after you run the sales prediction.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <nav aria-label="History pagination" class="mt-3">
+            <ul class="pagination justify-content-end">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill" href="?page={{ page - 1 }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link rounded-pill">Previous</span>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link rounded-pill" href="?page={{ p }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill" href="?page={{ page + 1 }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link rounded-pill">Next</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Search functionality
+    document.getElementById('searchHistory').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#historyTable tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Delete individual prediction
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            if (confirm('Delete this prediction record?')) {
+                fetch('/history/delete/' + id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+            }
+        });
+    });
+
+    // Clear all history
+    document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+        if (confirm('Delete all prediction history? This cannot be undone.')) {
+            fetch('/history/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
